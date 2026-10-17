@@ -1,0 +1,4 @@
+interface:
+  display_name: "Apple App Review Compliance"
+  short_description: "Audit App Review risks with evidence and scoped verdicts"
+  default_prompt: "Use $apple-app-review-compliance to review this app’s App Store readiness, citing evidence and unresolved checks."
