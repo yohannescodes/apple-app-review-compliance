@@ -45,3 +45,9 @@ Applied the maintainer-supplied README verbatim, starting from clean commit `77b
 - Checked relative README links and `git diff --check`: passed.
 
 The earlier copy-install results above describe the previous README. This revision's tests cover the shared symlink workflow. Network cloning and actual discovery/invocation in agent clients were not tested; client support was verified from official documentation. Licensing is unchanged.
+
+## MIT license adoption — October 17, 2026
+
+The maintainer chose MIT, superseding the earlier pending-license notes. Added the standard MIT text with copyright 2026 Yohannes Haile. Updated the README license section, repository inventory, symlink prerequisite and copy/update guidance to include LICENSE; third-party materials retain their owners’ rights.
+
+Verified that temporary complete copied and symlinked bundles expose the unchanged LICENSE, including paths with spaces. Checked all README shell blocks with Bash and zsh syntax validation, resolved relative README links, and ran `git diff --check`: passed. No client discovery retest was needed for this license/documentation change.

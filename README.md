@@ -42,6 +42,7 @@ The block below installs for both Codex and Claude Code. Remove either destinati
   set -eu
   skill_source="$HOME/.local/share/agent-skills/apple-app-review-compliance"
   test -f "$skill_source/SKILL.md"
+  test -f "$skill_source/LICENSE"
   test -f "$skill_source/references/review-matrix.md"
 
   for skills_dir in "$HOME/.agents/skills" "$HOME/.claude/skills"; do
@@ -57,7 +58,7 @@ The block below installs for both Codex and Claude Code. Remove either destinati
 )
 ```
 
-This links the entire bundle, including `SKILL.md`, `references/`, and `agents/`.
+This links the entire bundle, including `SKILL.md`, `LICENSE`, `references/`, and `agents/`.
 
 Already installed a copy? Save any customizations, then move the old installation to a backup folder outside all agent skills directories before rerunning step 2. Also check for earlier copies under `~/.codex/skills/` or inside your projects so the same skill is not discovered twice. Keep the backup until discovery succeeds.
 
@@ -127,13 +128,13 @@ To limit discovery to one app, use a project destination in step 2 instead of th
 | Codex | `/absolute/path/to/app/.agents/skills` |
 | Claude Code | `/absolute/path/to/app/.claude/skills` |
 
-An absolute symlink works on your machine. For a team or cloud environment, include the actual skill bundle in the project's supported skills directory so it does not depend on your personal filesystem.
+An absolute symlink works on your machine. For a team or cloud environment, include the actual skill bundle (including `LICENSE`) in the project's supported skills directory so it does not depend on your personal filesystem.
 
 ### Optional: use a standalone copy
 
-If symlinks are unsuitable, copy the complete skill bundle into the agent's skills directory. Include `SKILL.md`, `references/`, and `agents/` when present. Record the source commit and preserve any local edits separately.
+If symlinks are unsuitable, copy the complete skill bundle into the agent's skills directory. Include `SKILL.md`, `LICENSE`, the complete `references/` directory, and `agents/` when present. Preserve the copyright and license notice in redistributed copies. Record the source commit and preserve any local edits separately.
 
-Copies are snapshots. To update, back up the old installation outside the skills directories, then replace the complete bundle from a reviewed source revision. Verify discovery before removing the backup.
+Copies are snapshots. To update, back up the old installation outside the skills directories, then replace the complete bundle, including `LICENSE`, from a reviewed source revision. Verify discovery before removing the backup.
 
 ### Remove a symlink installation
 
@@ -161,6 +162,7 @@ These are **illustrative findings**, not an assessment of any particular app.
 
 ```text
 .
+├── LICENSE
 ├── README.md
 ├── SKILL.md
 ├── agents/
@@ -169,6 +171,7 @@ These are **illustrative findings**, not an assessment of any particular app.
     └── review-matrix.md
 ```
 
+- [`LICENSE`](LICENSE) — MIT license and copyright notice; include with copied installations.
 - [`agents/openai.yaml`](agents/openai.yaml) — optional UI display metadata and default prompt; not required for skill validity.
 - [`SKILL.md`](SKILL.md) — agent role, scope, audit workflow, priority checks, and reporting expectations.
 - [`references/review-matrix.md`](references/review-matrix.md) — evidence-oriented checklist linking triggers to guideline sections and validation methods.
@@ -185,4 +188,6 @@ Changes are welcome, particularly corrections tied to an official Apple section 
 
 ## License
 
-No license is currently granted for redistribution or reuse beyond rights provided by applicable law. A maintainer may add an explicit open-source license separately.
+This repository’s original content is licensed under the [MIT License](LICENSE), copyright © 2026 Yohannes Haile. Include the license and copyright notice when copying or redistributing the skill.
+
+Apple’s guidelines and other third-party materials remain subject to their respective owners’ rights; this license does not grant rights to those materials.
