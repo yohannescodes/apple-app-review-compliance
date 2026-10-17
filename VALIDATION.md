@@ -32,3 +32,16 @@ These are manual instruction reviews against concrete scenarios, not claims that
 - Actual discovery, invocation and hot reload in installed Codex/Claude Code clients were not exercised; instructions were checked against official documentation.
 - No app binary, device behavior or App Store Connect submission was audited by this documentation task.
 - Licensing remains the maintainer’s choice; no license was added or changed.
+
+## README symlink revision — October 17, 2026
+
+Applied the maintainer-supplied README verbatim, starting from clean commit `77baffc`.
+
+- Rechecked the official [Codex skill docs](https://developers.openai.com/codex/skills/) and [Claude Code skill docs](https://code.claude.com/docs/en/skills): both document personal/project skill locations and symlinked skill folders. Invocation and fresh-session guidance agree with the documentation.
+- Executed the README shell blocks in both Bash and zsh using temporary source, user and project paths containing spaces. Replaced home-path references with temporary paths and the GitHub clone URL with a local test upstream; no real user installations were modified.
+- Verified fresh links expose SKILL.md, references and optional metadata; reruns preserve existing installations; real directories and dangling links are reported without replacement.
+- Exercised fetch/diff, fast-forward pull and revision/status commands against a new local upstream commit. Both agent links exposed the updated contents.
+- Verified unlink removes links (including dangling links), preserves real directories and leaves the source checkout intact. Verified project-scoped destinations for both agents.
+- Checked relative README links and `git diff --check`: passed.
+
+The earlier copy-install results above describe the previous README. This revision's tests cover the shared symlink workflow. Network cloning and actual discovery/invocation in agent clients were not tested; client support was verified from official documentation. Licensing is unchanged.

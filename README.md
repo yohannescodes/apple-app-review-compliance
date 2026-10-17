@@ -15,70 +15,62 @@ A reusable agent skill for reviewing Apple-platform apps against the [App Store 
 
 ## Install
 
-The **source repository** holds this skill. The **destination project** is the app you want to review. Use absolute paths and keep them separate. These examples require Git and a POSIX shell (macOS/Linux); edit the two paths first.
+### Recommended: universal symlink installation
+
+Keep one checkout of this skill and link it to your agents. Updates and local edits then live in one place.
+
+“Universal” here means available across your local projects in Codex and Claude Code. Other agents need their own supported skill location; this setup does not install into remote or cloud environments.
+
+Requires Git and a macOS or Linux shell.
+
+#### 1. Clone the skill once
 
 ```bash
-skill_source="$HOME/Developer Tools/apple-app-review-compliance"
-app_project="$HOME/Projects/My App"
-mkdir -p "$(dirname "$skill_source")"
-git clone https://github.com/yohannescodes/apple-app-review-compliance.git "$skill_source"
-# The destination app must already exist.
-test -d "$app_project"
+mkdir -p "$HOME/.local/share/agent-skills"
+git clone https://github.com/yohannescodes/apple-app-review-compliance.git \
+  "$HOME/.local/share/agent-skills/apple-app-review-compliance"
 ```
 
-Choose **one** destination; use the same choice when updating:
+If you already have a source checkout, use its absolute path as `skill_source` in the next step.
 
-| Agent | Project installation | User-wide installation |
-|---|---|---|
-| Codex | `<project>/.agents/skills/apple-app-review-compliance/` | `~/.agents/skills/apple-app-review-compliance/` |
-| Claude Code | `<project>/.claude/skills/apple-app-review-compliance/` | `~/.claude/skills/apple-app-review-compliance/` |
+#### 2. Link it to your agents
 
-```bash
-skill_dest="$app_project/.agents/skills/apple-app-review-compliance"
-# Alternatives (uncomment only one):
-# skill_dest="$HOME/.agents/skills/apple-app-review-compliance"
-# skill_dest="$app_project/.claude/skills/apple-app-review-compliance"
-# skill_dest="$HOME/.claude/skills/apple-app-review-compliance"
-```
-
-Run this installation block after selecting the paths. It refuses destinations inside the source checkout and existing installations. It copies the entire bundle, including optional `agents/`, and records its source revision.
+The block below installs for both Codex and Claude Code. Remove either destination from the loop if you only use one agent. Existing installations are left untouched and reported for review.
 
 ```bash
 (
   set -eu
-  skill_source="$(cd "$skill_source" && pwd -P)"
+  skill_source="$HOME/.local/share/agent-skills/apple-app-review-compliance"
   test -f "$skill_source/SKILL.md"
-  test -d "$skill_source/references"
-  case "$skill_dest" in /*) ;; *) echo "Use an absolute destination" >&2; exit 1 ;; esac
-  mkdir -p "$(dirname "$skill_dest")"
-  skill_parent="$(cd "$(dirname "$skill_dest")" && pwd -P)"
-  skill_dest="$skill_parent/$(basename "$skill_dest")"
-  case "$skill_dest/" in "$skill_source/"*) echo "Destination is inside source" >&2; exit 1 ;; esac
-  test ! -e "$skill_dest" && test ! -L "$skill_dest"
-  mkdir "$skill_dest"
-  cp "$skill_source/SKILL.md" "$skill_dest/"
-  cp -R "$skill_source/references" "$skill_dest/"
-  if [ -d "$skill_source/agents" ]; then
-    cp -R "$skill_source/agents" "$skill_dest/"
-  fi
-  git -C "$skill_source" rev-parse HEAD > "$skill_dest/SOURCE_COMMIT"
-  git -C "$skill_source" status --porcelain > "$skill_dest/SOURCE_WORKTREE_STATUS"
-  test -f "$skill_dest/references/review-matrix.md"
+  test -f "$skill_source/references/review-matrix.md"
+
+  for skills_dir in "$HOME/.agents/skills" "$HOME/.claude/skills"; do
+    mkdir -p "$skills_dir"
+    skill_dest="$skills_dir/apple-app-review-compliance"
+    if [ -e "$skill_dest" ] || [ -L "$skill_dest" ]; then
+      printf 'Already exists; inspect before replacing: %s\n' "$skill_dest"
+    else
+      ln -s "$skill_source" "$skill_dest"
+      printf 'Linked: %s\n' "$skill_dest"
+    fi
+  done
 )
 ```
 
-A nonempty `SOURCE_WORKTREE_STATUS` means the copy includes local source edits: the commit alone does not reproduce it. Keep those edits or a patch alongside your update records.
+This links the entire bundle, including `SKILL.md`, `references/`, and `agents/`.
 
-### Discover and invoke
+Already installed a copy? Save any customizations, then move the old installation to a backup folder outside all agent skills directories before rerunning step 2. Also check for earlier copies under `~/.codex/skills/` or inside your projects so the same skill is not discovered twice. Keep the backup until discovery succeeds.
 
-Open the destination app project in your agent. Check the copied `SKILL.md` and `references/review-matrix.md` exist, then verify discovery:
+#### 3. Confirm discovery and use it
 
-- **Codex CLI/IDE:** use `/skills` or type `$` and select `apple-app-review-compliance`. Changes are detected automatically; restart Codex if it does not appear. Check for duplicate installations or disabled skill settings.
-- **Claude Code:** use `/skills` and confirm the skill is listed. Local `SKILL.md` changes are watched except in bare mode. If the top-level skills directory was created after session start, run `/reload-skills` after installation and later changes there. Start a fresh session if already-loaded instructions or companion references remain stale.
+Open the app project you want reviewed and start a fresh agent session.
 
-Verified October 17, 2026 against [OpenAI’s skill documentation](https://developers.openai.com/codex/skills/) and [Claude Code’s skill documentation](https://code.claude.com/docs/en/skills). Client versions and managed settings can affect discovery.
+- **Codex:** type `$` and select `apple-app-review-compliance`.
+- **Claude Code:** enter `/apple-app-review-compliance`.
 
-Codex prompt:
+If it does not appear, confirm the link resolves to a folder containing `SKILL.md` and `references/review-matrix.md`. Check for duplicate installations or managed settings that restrict skills.
+
+**Codex prompt:**
 
 ```text
 Use $apple-app-review-compliance to audit this app for submission.
@@ -86,33 +78,75 @@ Identify the reviewed revision, evidence gaps, and release verdict.
 Do not modify code yet.
 ```
 
-Claude Code prompt:
+**Claude Code prompt:**
 
 ```text
-/apple-app-review-compliance Review this PR's authentication changes.
-Compare main...HEAD, identify policy risks and evidence gaps, and suggest fixes.
+/apple-app-review-compliance Audit this app for submission.
+Identify the reviewed revision, evidence gaps, and release verdict.
+Do not modify code yet.
 ```
 
-You can also ask for feature planning or rejection triage; supply the proposed behavior or Apple’s rejection message and affected build. The skill infers the mode and scales report depth accordingly.
+You can also request a PR review, feature planning, or rejection triage. Supply the comparison revision, proposed behavior, or Apple's rejection message and affected build.
 
-### Update a copied installation
+Skill locations and symlink support were checked October 17, 2026 against the [Codex documentation](https://developers.openai.com/codex/skills/) and [Claude Code documentation](https://code.claude.com/docs/en/skills).
 
-Copies are snapshots, not linked to upstream. Before updating, read the installed `SOURCE_COMMIT` and `SOURCE_WORKTREE_STATUS`, compare the installed bundle against that revision, and save/review local customizations. Review upstream changes in the source checkout before choosing a new revision (for example, fetch and inspect a diff, then use `git pull --ff-only` if appropriate).
+### Update the shared skill
 
-Move the old installation to a backup **outside any agent skills directory**, using a unique absolute backup path:
+Review upstream changes in the shared checkout:
 
 ```bash
-skill_backup="$HOME/Skill Backups/apple-app-review-compliance-before-update"
-(
-  set -eu
-  test -d "$skill_dest"
-  test ! -e "$skill_backup"
-  mkdir -p "$(dirname "$skill_backup")"
-  mv "$skill_dest" "$skill_backup"
-)
+skill_source="$HOME/.local/share/agent-skills/apple-app-review-compliance"
+git -C "$skill_source" status --short
+git -C "$skill_source" fetch origin
+git -C "$skill_source" diff HEAD..@{upstream}
 ```
 
-Rerun the installation block with the reviewed source and original destination. Replacing the full bundle removes obsolete references and metadata; copying over the old directory can leave stale files. Reapply intentional customizations, record them separately, and repeat discovery verification. If installation fails, retain the backup and restore it after moving any partial installation aside.
+After reviewing the changes and saving any local customizations, update:
+
+```bash
+git -C "$HOME/.local/share/agent-skills/apple-app-review-compliance" pull --ff-only
+```
+
+Every linked agent uses the updated files. Start a fresh session to ensure previously loaded instructions and references are refreshed. Local edits through a link also change the shared checkout.
+
+For a reproducible audit, record the skill's commit and any local changes:
+
+```bash
+git -C "$HOME/.local/share/agent-skills/apple-app-review-compliance" rev-parse HEAD
+git -C "$HOME/.local/share/agent-skills/apple-app-review-compliance" status --short
+```
+
+A commit identifies the exact skill contents only when the working tree is clean.
+
+### Optional: install for one project
+
+To limit discovery to one app, use a project destination in step 2 instead of the user-wide destinations:
+
+| Agent | Project skills directory |
+|---|---|
+| Codex | `/absolute/path/to/app/.agents/skills` |
+| Claude Code | `/absolute/path/to/app/.claude/skills` |
+
+An absolute symlink works on your machine. For a team or cloud environment, include the actual skill bundle in the project's supported skills directory so it does not depend on your personal filesystem.
+
+### Optional: use a standalone copy
+
+If symlinks are unsuitable, copy the complete skill bundle into the agent's skills directory. Include `SKILL.md`, `references/`, and `agents/` when present. Record the source commit and preserve any local edits separately.
+
+Copies are snapshots. To update, back up the old installation outside the skills directories, then replace the complete bundle from a reviewed source revision. Verify discovery before removing the backup.
+
+### Remove a symlink installation
+
+Remove only the links you created; the shared checkout remains available:
+
+```bash
+for skills_dir in "$HOME/.agents/skills" "$HOME/.claude/skills"; do
+  skill_dest="$skills_dir/apple-app-review-compliance"
+  if [ -L "$skill_dest" ]; then
+    unlink "$skill_dest"
+  fi
+done
+```
 
 ## Typical output
 
